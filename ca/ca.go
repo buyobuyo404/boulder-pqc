@@ -32,6 +32,7 @@ import (
 )
 
 // Metrics for CA statistics
+// CA统计指标
 const (
 	csrExtensionCategory          = "category"
 	csrExtensionBasic             = "basic"
@@ -51,6 +52,9 @@ const (
 // determining which issuer to use to sign a given (pre)cert, based on its
 // PublicKeyAlgorithm. Lookup by NameID is useful for looking up the appropriate
 // issuer based on the issuer of a given (pre)certificate.
+// 发行者的两个秘钥映射
+// byAlg: 根据x509公钥类型找到对应的颁发者 => (预)证书
+// byNameID: 根据NameID找到对应的颁发者 => (预)证书
 type issuerMaps struct {
 	byAlg    map[x509.PublicKeyAlgorithm]*issuance.Issuer
 	byNameID map[issuance.IssuerNameID]*issuance.Issuer
@@ -58,6 +62,8 @@ type issuerMaps struct {
 
 // certificateAuthorityImpl represents a CA that signs certificates.
 // It can sign OCSP responses as well, but only via delegation to an ocspImpl.
+// certificateAuthorityImpl表示签署证书的CA
+// 它也可以签署OCSP响应, 但只能通过委托给ocspImp的方式
 type certificateAuthorityImpl struct {
 	capb.UnimplementedCertificateAuthorityServer
 	capb.UnimplementedOCSPGeneratorServer
@@ -193,6 +199,7 @@ func NewCertificateAuthorityImpl(
 }
 
 // noteSignError is called after operations that may cause a PKCS11 signing error.
+// 在可能导致pkcs11签名错误操作之后调用
 func (ca *certificateAuthorityImpl) noteSignError(err error) {
 	var pkcs11Error *pkcs11.Error
 	if errors.As(err, &pkcs11Error) {
@@ -400,9 +407,17 @@ func (ca *certificateAuthorityImpl) issuePrecertificateInner(ctx context.Context
 		// Use the issuer which corresponds to the algorithm of the public key
 		// contained in the CSR, unless we have an allowlist of registration IDs
 		// for ECDSA, in which case switch all not-allowed accounts to RSA issuance.
+		// 使用与csr中包含的公钥算法相对应的issuer, 除非我们有ECDSA注册id的允许列表, 在这种情况想, 将所有不允许的账户切换到RSA颁发
+		// 目前的判断: 是对rsa做修改, 因此不需要加pqc的判断
 		alg := csr.PublicKeyAlgorithm
-		if alg == x509.ECDSA && !features.Enabled(features.ECDSAForAll) && ca.ecdsaAllowList != nil && !ca.ecdsaAllowList.permitted(issueReq.RegistrationID) {
+		if alg == x509.ECDSA &&
+			!features.Enabled(features.ECDSAForAll) &&
+			ca.ecdsaAllowList != nil &&
+			!ca.ecdsaAllowList.permitted(issueReq.RegistrationID) {
 			alg = x509.RSA
+		} else {
+			// 当算法不是ecdsa时, 算法使用本身的算法
+			alg = alg
 		}
 		issuer, ok = ca.issuers.byAlg[alg]
 		if !ok {

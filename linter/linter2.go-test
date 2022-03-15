@@ -54,20 +54,16 @@ func New(realIssuer *x509.Certificate, realSigner crypto.Signer, skipLints []str
 	if err != nil {
 		return nil, err
 	}
-
 	lintIssuer, err := makeIssuer(realIssuer, lintSigner)
 	if err != nil {
 		return nil, err
 	}
-
 	reg, err := makeRegistry(skipLints)
-
 	if err != nil {
 		return nil, err
 	}
 
 	linter := &Linter{lintIssuer, lintSigner, reg}
-
 	return linter, nil
 }
 
@@ -80,19 +76,15 @@ func (l Linter) Check(tbs *x509.Certificate, subjectPubKey crypto.PublicKey) err
 	if err != nil {
 		return err
 	}
-
-	err = check(cert, l.registry)
-	if err != nil {
-		// 这里有错也返回
-		return nil
-	}
-
 	return check(cert, l.registry)
 }
 
 func makeSigner(realSigner crypto.Signer) (crypto.Signer, error) {
 	var lintSigner crypto.Signer
 	var err error
+	//fmt.Println(realSigner.Public())
+
+	fmt.Println(111)
 	switch k := realSigner.Public().(type) {
 	case *rsa.PublicKey:
 		lintSigner, err = rsa.GenerateKey(rand.Reader, k.Size()*8)

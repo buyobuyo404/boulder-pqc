@@ -664,6 +664,13 @@ func issueCertificateSubTestProfileSelectionECDSA(t *testing.T, i *TestCertifica
 	test.AssertEquals(t, i.cert.KeyUsage, expectedKeyUsage)
 }
 
+func issueCertificateSubTestProfileSelectionFalcon512(t *testing.T, i *TestCertificateIssuance) {
+	// Certificates for Falcon512 keys should be marked as usable for only signatures.
+	expectedKeyUsage := x509.KeyUsageDigitalSignature
+	t.Logf("expected key usage %v, got %v", expectedKeyUsage, i.cert.KeyUsage)
+	test.AssertEquals(t, i.cert.KeyUsage, expectedKeyUsage)
+}
+
 func countMustStaple(t *testing.T, cert *x509.Certificate) (count int) {
 	oidTLSFeature := asn1.ObjectIdentifier{1, 3, 6, 1, 5, 5, 7, 1, 24}
 	mustStapleFeatureValue := []byte{0x30, 0x03, 0x02, 0x01, 0x05}

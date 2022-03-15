@@ -8,10 +8,12 @@ import (
 	"encoding/asn1"
 	"errors"
 	"fmt"
+	"github.com/miekg/pkcs11"
+
+	//"github.com/miekg/pkcs11"
 	"io"
 	"math/big"
-
-	"github.com/miekg/pkcs11"
+	//"github.com/miekg/pkcs11"
 )
 
 type PKCtx interface {

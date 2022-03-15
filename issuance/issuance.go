@@ -32,6 +32,23 @@ import (
 	"github.com/letsencrypt/boulder/privatekey"
 	"github.com/letsencrypt/pkcs11key/v4"
 	"golang.org/x/crypto/ocsp"
+
+	falcon1024 "crypto/pqc/falcon/falcon1024"
+	falcon512 "crypto/pqc/falcon/falcon512"
+
+	dilithium2 "crypto/pqc/dilithium/dilithium2"
+	dilithium2AES "crypto/pqc/dilithium/dilithium2AES"
+	dilithium3 "crypto/pqc/dilithium/dilithium3"
+	dilithium3AES "crypto/pqc/dilithium/dilithium3AES"
+	dilithium5 "crypto/pqc/dilithium/dilithium5"
+	dilithium5AES "crypto/pqc/dilithium/dilithium5AES"
+
+	rainbowIIICircumzenithal "crypto/pqc/rainbow/rainbowIIICircumzenithal"
+	rainbowIIIClassic "crypto/pqc/rainbow/rainbowIIIClassic"
+	rainbowIIICompressed "crypto/pqc/rainbow/rainbowIIICompressed"
+	rainbowVCircumzenithal "crypto/pqc/rainbow/rainbowVCircumzenithal"
+	rainbowVClassic "crypto/pqc/rainbow/rainbowVClassic"
+	rainbowVCompressed "crypto/pqc/rainbow/rainbowVCompressed"
 )
 
 // ProfileConfig describes the certificate issuance constraints for all issuers.
@@ -59,9 +76,28 @@ type PolicyQualifier struct {
 }
 
 // IssuerConfig describes the constraints on and URLs used by a single issuer.
+// 描述了单个颁发者的约束和URL
 type IssuerConfig struct {
 	UseForRSALeaves   bool
 	UseForECDSALeaves bool
+
+	// PQC
+	UseForFalcon512Leaves  bool
+	UseForFalcon1024Leaves bool
+
+	UseForDilithium2Leaves    bool
+	UseForDilithium3Leaves    bool
+	UseForDilithium5Leaves    bool
+	UseForDilithium2AESLeaves bool
+	UseForDilithium3AESLeaves bool
+	UseForDilithium5AESLeaves bool
+
+	UseForRainbowIIIClassicLeaves        bool
+	UseForRainbowIIICircumzenithalLeaves bool
+	UseForRainbowIIICompressedLeaves     bool
+	UseForRainbowVClassicLeaves          bool
+	UseForRainbowVCircumzenithalLeaves   bool
+	UseForRainbowVCompressedLeaves       bool
 
 	IssuerURL string
 	OCSPURL   string
@@ -157,6 +193,24 @@ type Profile struct {
 	useForRSALeaves   bool
 	useForECDSALeaves bool
 
+	// PQC
+	useForFalcon512Leaves  bool
+	useForFalcon1024Leaves bool
+
+	useForDilithium2Leaves    bool
+	useForDilithium3Leaves    bool
+	useForDilithium5Leaves    bool
+	useForDilithium2AESLeaves bool
+	useForDilithium3AESLeaves bool
+	useForDilithium5AESLeaves bool
+
+	useForRainbowIIIClassicLeaves        bool
+	useForRainbowIIICircumzenithalLeaves bool
+	useForRainbowIIICompressedLeaves     bool
+	useForRainbowVClassicLeaves          bool
+	useForRainbowVCircumzenithalLeaves   bool
+	useForRainbowVCompressedLeaves       bool
+
 	allowMustStaple bool
 	allowCTPoison   bool
 	allowSCTList    bool
@@ -203,15 +257,34 @@ func NewProfile(profileConfig ProfileConfig, issuerConfig IssuerConfig) (*Profil
 	sp := &Profile{
 		useForRSALeaves:   issuerConfig.UseForRSALeaves,
 		useForECDSALeaves: issuerConfig.UseForECDSALeaves,
-		allowMustStaple:   profileConfig.AllowMustStaple,
-		allowCTPoison:     profileConfig.AllowCTPoison,
-		allowSCTList:      profileConfig.AllowSCTList,
-		allowCommonName:   profileConfig.AllowCommonName,
-		issuerURL:         issuerConfig.IssuerURL,
-		crlURL:            issuerConfig.CRLURL,
-		ocspURL:           issuerConfig.OCSPURL,
-		maxBackdate:       profileConfig.MaxValidityBackdate.Duration,
-		maxValidity:       profileConfig.MaxValidityPeriod.Duration,
+
+		// PQC
+		useForFalcon512Leaves:  issuerConfig.UseForFalcon512Leaves,
+		useForFalcon1024Leaves: issuerConfig.UseForFalcon1024Leaves,
+
+		useForDilithium2Leaves:    issuerConfig.UseForDilithium2Leaves,
+		useForDilithium3Leaves:    issuerConfig.UseForDilithium3Leaves,
+		useForDilithium5Leaves:    issuerConfig.UseForDilithium5Leaves,
+		useForDilithium2AESLeaves: issuerConfig.UseForDilithium2AESLeaves,
+		useForDilithium3AESLeaves: issuerConfig.UseForDilithium3AESLeaves,
+		useForDilithium5AESLeaves: issuerConfig.UseForDilithium5AESLeaves,
+
+		useForRainbowIIIClassicLeaves:        issuerConfig.UseForRainbowIIIClassicLeaves,
+		useForRainbowIIICircumzenithalLeaves: issuerConfig.UseForRainbowIIICircumzenithalLeaves,
+		useForRainbowIIICompressedLeaves:     issuerConfig.UseForRainbowIIICompressedLeaves,
+		useForRainbowVClassicLeaves:          issuerConfig.UseForRainbowVClassicLeaves,
+		useForRainbowVCircumzenithalLeaves:   issuerConfig.UseForRainbowVCircumzenithalLeaves,
+		useForRainbowVCompressedLeaves:       issuerConfig.UseForRainbowVCompressedLeaves,
+
+		allowMustStaple: profileConfig.AllowMustStaple,
+		allowCTPoison:   profileConfig.AllowCTPoison,
+		allowSCTList:    profileConfig.AllowSCTList,
+		allowCommonName: profileConfig.AllowCommonName,
+		issuerURL:       issuerConfig.IssuerURL,
+		crlURL:          issuerConfig.CRLURL,
+		ocspURL:         issuerConfig.OCSPURL,
+		maxBackdate:     profileConfig.MaxValidityBackdate.Duration,
+		maxValidity:     profileConfig.MaxValidityPeriod.Duration,
 	}
 	if len(profileConfig.Policies) > 0 {
 		var policies []policyasn1.PolicyInformation
@@ -257,6 +330,66 @@ func (p *Profile) requestValid(clk clock.Clock, req *IssuanceRequest) error {
 	case *ecdsa.PublicKey:
 		if !p.useForECDSALeaves {
 			return errors.New("cannot sign ECDSA public keys")
+		}
+
+	// PQC
+	case *falcon512.PublicKey:
+		if !p.useForFalcon512Leaves {
+			return errors.New("cannot sign falcon512 public keys")
+		}
+	case *falcon1024.PublicKey:
+		if !p.useForFalcon1024Leaves {
+			return errors.New("cannot sign falcon1024 public keys")
+		}
+
+	case *dilithium2.PublicKey:
+		if !p.useForDilithium2Leaves {
+			return errors.New("cannot sign dilithium2 public keys")
+		}
+	case *dilithium3.PublicKey:
+		if !p.useForDilithium3Leaves {
+			return errors.New("cannot sign dilithium3 public keys")
+		}
+	case *dilithium5.PublicKey:
+		if !p.useForDilithium5Leaves {
+			return errors.New("cannot sign dilithium5 public keys")
+		}
+	case *dilithium2AES.PublicKey:
+		if !p.useForDilithium2AESLeaves {
+			return errors.New("cannot sign dilithium2AES public keys")
+		}
+	case *dilithium3AES.PublicKey:
+		if !p.useForDilithium3AESLeaves {
+			return errors.New("cannot sign dilithium3AES public keys")
+		}
+	case *dilithium5AES.PublicKey:
+		if !p.useForDilithium5AESLeaves {
+			return errors.New("cannot sign dilithium5AES public keys")
+		}
+
+	case *rainbowIIIClassic.PublicKey:
+		if !p.useForRainbowIIIClassicLeaves {
+			return errors.New("cannot sign rainbowIIIClassic public keys")
+		}
+	case *rainbowIIICircumzenithal.PublicKey:
+		if !p.useForRainbowIIICircumzenithalLeaves {
+			return errors.New("cannot sign rainbowIIICircumzenithal public keys")
+		}
+	case *rainbowIIICompressed.PublicKey:
+		if !p.useForRainbowIIICompressedLeaves {
+			return errors.New("cannot sign rainbowIIICompressed public keys")
+		}
+	case *rainbowVClassic.PublicKey:
+		if !p.useForRainbowVClassicLeaves {
+			return errors.New("cannot sign rainbowVClassic public keys")
+		}
+	case *rainbowVCircumzenithal.PublicKey:
+		if !p.useForRainbowVCircumzenithalLeaves {
+			return errors.New("cannot sign rainbowVCircumzenithal public keys")
+		}
+	case *rainbowVCompressed.PublicKey:
+		if !p.useForRainbowVCompressedLeaves {
+			return errors.New("cannot sign rainbowVCompressed public keys")
 		}
 	default:
 		return errors.New("unsupported public key type")
@@ -474,11 +607,61 @@ func NewIssuer(cert *Certificate, signer crypto.Signer, profile *Profile, linter
 		default:
 			return nil, fmt.Errorf("unsupported ECDSA curve: %s", k.Curve.Params().Name)
 		}
+
+	// PQC
+	case *falcon512.PublicKey:
+		profile.sigAlg = x509.PureFalcon512
+	case *falcon1024.PublicKey:
+		profile.sigAlg = x509.PureFalcon1024
+
+	case *dilithium2.PublicKey:
+		profile.sigAlg = x509.PureDilithium2
+	case *dilithium3.PublicKey:
+		profile.sigAlg = x509.PureDilithium3
+	case *dilithium5.PublicKey:
+		profile.sigAlg = x509.PureDilithium5
+	case *dilithium2AES.PublicKey:
+		profile.sigAlg = x509.PureDilithium2AES
+	case *dilithium3AES.PublicKey:
+		profile.sigAlg = x509.PureDilithium3AES
+	case *dilithium5AES.PublicKey:
+		profile.sigAlg = x509.PureDilithium5AES
+
+	case *rainbowIIIClassic.PublicKey:
+		profile.sigAlg = x509.PureRainbowIIIClassic
+	case *rainbowIIICircumzenithal.PublicKey:
+		profile.sigAlg = x509.PureRainbowIIICircumzenithal
+	case *rainbowIIICompressed.PublicKey:
+		profile.sigAlg = x509.PureRainbowIIICompressed
+	case *rainbowVClassic.PublicKey:
+		profile.sigAlg = x509.PureRainbowVClassic
+	case *rainbowVCircumzenithal.PublicKey:
+		profile.sigAlg = x509.PureRainbowVCircumzenithal
+	case *rainbowVCompressed.PublicKey:
+		profile.sigAlg = x509.PureRainbowVCompressed
+
 	default:
 		return nil, errors.New("unsupported issuer key type")
 	}
 
-	if profile.useForRSALeaves || profile.useForECDSALeaves {
+	if profile.useForRSALeaves ||
+		profile.useForECDSALeaves ||
+		// PQC
+		profile.useForFalcon512Leaves ||
+		profile.useForFalcon1024Leaves ||
+		profile.useForDilithium2Leaves ||
+		profile.useForDilithium3Leaves ||
+		profile.useForDilithium5Leaves ||
+		profile.useForDilithium2AESLeaves ||
+		profile.useForDilithium3AESLeaves ||
+		profile.useForDilithium5AESLeaves ||
+		profile.useForRainbowIIIClassicLeaves ||
+		profile.useForRainbowIIICircumzenithalLeaves ||
+		profile.useForRainbowIIICompressedLeaves ||
+		profile.useForRainbowVClassicLeaves ||
+		profile.useForRainbowVCircumzenithalLeaves ||
+		profile.useForRainbowVCompressedLeaves {
+
 		if cert.KeyUsage&x509.KeyUsageCertSign == 0 {
 			return nil, errors.New("end-entity signing cert does not have keyUsage certSign")
 		}
@@ -509,6 +692,53 @@ func (i *Issuer) Algs() []x509.PublicKeyAlgorithm {
 	if i.Profile.useForECDSALeaves {
 		algs = append(algs, x509.ECDSA)
 	}
+
+	// PQC
+	if i.Profile.useForFalcon512Leaves {
+		algs = append(algs, x509.Falcon512)
+	}
+	if i.Profile.useForFalcon1024Leaves {
+		algs = append(algs, x509.Falcon1024)
+	}
+
+	if i.Profile.useForDilithium2Leaves {
+		algs = append(algs, x509.Dilithium2)
+	}
+	if i.Profile.useForDilithium3Leaves {
+		algs = append(algs, x509.Dilithium3)
+	}
+	if i.Profile.useForDilithium5Leaves {
+		algs = append(algs, x509.Dilithium5)
+	}
+	if i.Profile.useForDilithium2AESLeaves {
+		algs = append(algs, x509.Dilithium2AES)
+	}
+	if i.Profile.useForDilithium3AESLeaves {
+		algs = append(algs, x509.Dilithium3AES)
+	}
+	if i.Profile.useForDilithium5AESLeaves {
+		algs = append(algs, x509.Dilithium5AES)
+	}
+
+	if i.Profile.useForRainbowIIIClassicLeaves {
+		algs = append(algs, x509.RainbowIIIClassic)
+	}
+	if i.Profile.useForRainbowIIICircumzenithalLeaves {
+		algs = append(algs, x509.RainbowIIICircumzenithal)
+	}
+	if i.Profile.useForRainbowIIICompressedLeaves {
+		algs = append(algs, x509.RainbowIIICompressed)
+	}
+	if i.Profile.useForRainbowVClassicLeaves {
+		algs = append(algs, x509.RainbowVClassic)
+	}
+	if i.Profile.useForRainbowVCircumzenithalLeaves {
+		algs = append(algs, x509.RainbowVCircumzenithal)
+	}
+	if i.Profile.useForRainbowVCompressedLeaves {
+		algs = append(algs, x509.RainbowVCompressed)
+	}
+
 	return algs
 }
 
@@ -630,7 +860,13 @@ func (i *Issuer) Issue(req *IssuanceRequest) ([]byte, error) {
 	switch req.PublicKey.(type) {
 	case *rsa.PublicKey:
 		template.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment
-	case *ecdsa.PublicKey:
+	case *ecdsa.PublicKey,
+		*falcon512.PublicKey, *falcon1024.PublicKey,
+		*dilithium2.PublicKey, *dilithium3.PublicKey, *dilithium5.PublicKey,
+		*dilithium2AES.PublicKey, *dilithium3AES.PublicKey, *dilithium5AES.PublicKey,
+		*rainbowIIIClassic.PublicKey, *rainbowIIICircumzenithal.PublicKey, *rainbowIIICompressed.PublicKey,
+		*rainbowVClassic.PublicKey, *rainbowVCircumzenithal.PublicKey, *rainbowVCompressed.PublicKey:
+
 		template.KeyUsage = x509.KeyUsageDigitalSignature
 	}
 
@@ -650,6 +886,8 @@ func (i *Issuer) Issue(req *IssuanceRequest) ([]byte, error) {
 
 	// check that the tbsCertificate is properly formed by signing it
 	// with a throwaway key and then linting it using zlint
+
+	// 问题方法1
 	err = i.Linter.Check(template, req.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("tbsCertificate linting failed: %w", err)
