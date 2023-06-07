@@ -1,7 +1,10 @@
 # Honeycomb Beeline for Go
 
+[![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/beeline-go?color=success)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
 [![CircleCI](https://circleci.com/gh/honeycombio/beeline-go.svg?style=shield)](https://circleci.com/gh/honeycombio/beeline-go)
 [![GoDoc](https://godoc.org/github.com/honeycombio/beeline-go?status.svg)](https://godoc.org/github.com/honeycombio/beeline-go)
+
+⚠️**Note**: Beelines are Honeycomb's legacy instrumentation libraries. We embrace OpenTelemetry as the effective way to instrument applications. For any new observability efforts, we recommend [instrumenting with OpenTelemetry](https://docs.honeycomb.io/getting-data-in/opentelemetry/go-distro/).
 
 This package makes it easy to instrument your Go app to send useful events to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 - [Usage and Examples](https://docs.honeycomb.io/getting-data-in/beelines/go-beeline/)
@@ -10,7 +13,7 @@ This package makes it easy to instrument your Go app to send useful events to [H
 
 ## Dependencies
 
-The beeline uses [go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to track external dependencies: golang 1.11 or newer is therefore required to build
+Golang 1.17+
 
 ## Contributions
 
